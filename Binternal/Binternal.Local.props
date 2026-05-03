@@ -3,15 +3,15 @@
   ToolsVersion="4.0"
   TreatAsLocalProperty="TaskAssembly"
 >
-  <Import Project="Binline.props" />
+  <Import Project="Binternal.props" />
 
   <!-- Props for local testing, used by the demo project -->
   <PropertyGroup>
     <TaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'"
-      >$(MSBuildThisFileDirectory)/bin/$(Configuration)/netstandard2.0/Binline.dll</TaskAssembly
+      >$(MSBuildThisFileDirectory)/bin/$(Configuration)/netstandard2.0/Binternal.dll</TaskAssembly
     >
     <TaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'"
-      >$(MSBuildThisFileDirectory)/bin/$(Configuration)/net472/Binline.dll</TaskAssembly
+      >$(MSBuildThisFileDirectory)/bin/$(Configuration)/net472/Binternal.dll</TaskAssembly
     >
   </PropertyGroup>
 </Project>

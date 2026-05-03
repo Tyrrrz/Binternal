@@ -2,15 +2,15 @@
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
   ToolsVersion="4.0"
 >
-  <!-- Mark inlined package references as private so they are excluded from the generated nuspec -->
+  <!-- Mark internalized package references as private so they are excluded from the generated nuspec -->
   <Target
-    Name="_BinlineSetPrivateAssets"
+    Name="_BinternalSetPrivateAssets"
     BeforeTargets="GenerateNuspec"
-    Condition="@(PackageReference->WithMetadataValue('Inline', 'true')->Count()) > 0"
+    Condition="@(PackageReference->WithMetadataValue('Internalize', 'true')->Count()) > 0"
   >
     <ItemGroup>
       <PackageReference
-        Condition="'%(PackageReference.Inline)' == 'true'"
+        Condition="'%(PackageReference.Internalize)' == 'true'"
         Update="%(PackageReference.Identity)"
       >
         <PrivateAssets>all</PrivateAssets>
@@ -18,13 +18,13 @@
     </ItemGroup>
   </Target>
 
-  <!-- Run after the build to inline marked package references -->
+  <!-- Run after the build to internalize marked package references -->
   <Target
-    Name="_BinlineMerge"
+    Name="_BinternalMerge"
     AfterTargets="Build"
-    Condition="@(PackageReference->WithMetadataValue('Inline', 'true')->Count()) > 0"
+    Condition="@(PackageReference->WithMetadataValue('Internalize', 'true')->Count()) > 0"
   >
-    <BinlineTask
+    <BinternalTask
       TargetAssembly="$(TargetPath)"
       PackageReferences="@(PackageReference)"
       ReferenceCopyLocalPaths="@(ReferenceCopyLocalPaths)"

@@ -12,10 +12,10 @@
 
   <PropertyGroup>
     <Authors>$(Company)</Authors>
-    <Description>MSBuild extension that inlines package and project references as internal dependencies</Description>
-    <PackageTags>msbuild ilmerge ilrepack inline dependencies</PackageTags>
-    <PackageProjectUrl>https://github.com/Tyrrrz/Binline</PackageProjectUrl>
-    <PackageReleaseNotes>https://github.com/Tyrrrz/Binline/releases</PackageReleaseNotes>
+    <Description>MSBuild extension that internalizes package and project references as internal dependencies</Description>
+    <PackageTags>msbuild ilmerge ilrepack internalize dependencies</PackageTags>
+    <PackageProjectUrl>https://github.com/Tyrrrz/Binternal</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/Tyrrrz/Binternal/releases</PackageReleaseNotes>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 </Project>

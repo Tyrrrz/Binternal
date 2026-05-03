@@ -2,15 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Binline.Utils;
+using Binternal.Utils;
 using ILRepacking;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using MsbuildTask = Microsoft.Build.Utilities.Task;
 
-namespace Binline;
+namespace Binternal;
 
-public class BinlineTask : MsbuildTask
+public class BinternalTask : MsbuildTask
 {
     [Required]
     public string TargetAssembly { get; set; } = "";
@@ -21,29 +21,29 @@ public class BinlineTask : MsbuildTask
     [Required]
     public ITaskItem[] ReferenceCopyLocalPaths { get; set; } = [];
 
-    private IReadOnlyList<string> ResolveInlinedAssemblies()
+    private IReadOnlyList<string> ResolveInternalizedAssemblies()
     {
-        // Collect package IDs that are marked for inlining
-        var inlinedPackageIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Collect package IDs that are marked for internalization
+        var internalizedPackageIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var packageRef in PackageReferences)
         {
-            var inlineValue = packageRef.GetMetadata("Inline");
-            if (string.Equals(inlineValue, "true", StringComparison.OrdinalIgnoreCase))
-                inlinedPackageIds.Add(packageRef.ItemSpec);
+            var internalizeValue = packageRef.GetMetadata("Internalize");
+            if (string.Equals(internalizeValue, "true", StringComparison.OrdinalIgnoreCase))
+                internalizedPackageIds.Add(packageRef.ItemSpec);
         }
 
-        if (inlinedPackageIds.Count == 0)
+        if (internalizedPackageIds.Count == 0)
             return Array.Empty<string>();
 
         // Find DLLs belonging to the marked packages
-        var inlinedAssemblies = new List<string>();
+        var internalizedAssemblies = new List<string>();
         foreach (var reference in ReferenceCopyLocalPaths)
         {
             var nugetPackageId = reference.GetMetadata("NuGetPackageId");
             if (string.IsNullOrEmpty(nugetPackageId))
                 continue;
 
-            if (!inlinedPackageIds.Contains(nugetPackageId))
+            if (!internalizedPackageIds.Contains(nugetPackageId))
                 continue;
 
             var path = reference.GetMetadata("FullPath");
@@ -56,38 +56,38 @@ public class BinlineTask : MsbuildTask
             if (!File.Exists(path))
             {
                 Log.LogWarning(
-                    "Binline: Could not find assembly '{0}' from package '{1}'.",
+                    "Binternal: Could not find assembly '{0}' from package '{1}'.",
                     path,
                     nugetPackageId
                 );
                 continue;
             }
 
-            inlinedAssemblies.Add(path);
+            internalizedAssemblies.Add(path);
         }
 
-        return inlinedAssemblies;
+        return internalizedAssemblies;
     }
 
     public override bool Execute()
     {
-        var inlinedAssemblies = ResolveInlinedAssemblies();
+        var internalizedAssemblies = ResolveInternalizedAssemblies();
 
-        if (inlinedAssemblies.Count == 0)
+        if (internalizedAssemblies.Count == 0)
             return true;
 
         Log.LogMessage(
             MessageImportance.High,
-            "Binline: Inlining {0} assembly(-ies) into '{1}'.",
-            inlinedAssemblies.Count,
+            "Binternal: Internalizing {0} assembly(-ies) into '{1}'.",
+            internalizedAssemblies.Count,
             TargetAssembly
         );
 
-        foreach (var asm in inlinedAssemblies)
-            Log.LogMessage(MessageImportance.Normal, "Binline: Inlining '{0}'.", asm);
+        foreach (var asm in internalizedAssemblies)
+            Log.LogMessage(MessageImportance.Normal, "Binternal: Internalizing '{0}'.", asm);
 
         var outputDirectory = Path.GetDirectoryName(TargetAssembly) ?? string.Empty;
-        var inputAssemblies = new[] { TargetAssembly }.Concat(inlinedAssemblies).ToArray();
+        var inputAssemblies = new[] { TargetAssembly }.Concat(internalizedAssemblies).ToArray();
 
         var options = new RepackOptions
         {
@@ -107,12 +107,12 @@ public class BinlineTask : MsbuildTask
         }
         catch (Exception ex)
         {
-            Log.LogError("Binline: Failed to inline assemblies: {0}", ex.Message);
+            Log.LogError("Binternal: Failed to internalize assemblies: {0}", ex.Message);
             return false;
         }
 
-        // Remove the now-inlined assemblies from the output directory
-        foreach (var asmPath in inlinedAssemblies)
+        // Remove the now-internalized assemblies from the output directory
+        foreach (var asmPath in internalizedAssemblies)
         {
             var asmFileName = Path.GetFileName(asmPath);
             var outputPath = Path.Combine(outputDirectory, asmFileName);
@@ -132,21 +132,21 @@ public class BinlineTask : MsbuildTask
                 File.Delete(outputPath);
                 Log.LogMessage(
                     MessageImportance.Normal,
-                    "Binline: Removed inlined assembly '{0}' from output.",
+                    "Binternal: Removed internalized assembly '{0}' from output.",
                     asmFileName
                 );
             }
             catch (Exception ex)
             {
                 Log.LogWarning(
-                    "Binline: Could not remove inlined assembly '{0}': {1}",
+                    "Binternal: Could not remove internalized assembly '{0}': {1}",
                     asmFileName,
                     ex.Message
                 );
             }
         }
 
-        Log.LogMessage(MessageImportance.High, "Binline: Inlining completed successfully.");
+        Log.LogMessage(MessageImportance.High, "Binternal: Internalization completed successfully.");
         return true;
     }
 }

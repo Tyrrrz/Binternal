@@ -2,7 +2,7 @@ using ILRepacking;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Binline.Utils;
+namespace Binternal.Utils;
 
 internal sealed class MsbuildILRepackLogger(TaskLoggingHelper log) : ILRepacking.ILogger
 {

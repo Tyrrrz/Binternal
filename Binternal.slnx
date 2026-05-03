@@ -7,6 +7,6 @@
     <File Path="Readme.md" />
   </Folder>
 
-  <Project Path="Binline/Binline.csproj" />
-  <Project Path="Binline.Demo/Binline.Demo.csproj" />
+  <Project Path="Binternal/Binternal.csproj" />
+  <Project Path="Binternal.Demo/Binternal.Demo.csproj" />
 </Solution>

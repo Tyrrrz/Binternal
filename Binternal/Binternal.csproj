@@ -13,8 +13,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="Binline.props" Pack="true" PackagePath="build" />
-    <Content Include="Binline.targets" Pack="true" PackagePath="build" />
+    <Content Include="Binternal.props" Pack="true" PackagePath="build" />
+    <Content Include="Binternal.targets" Pack="true" PackagePath="build" />
   </ItemGroup>
 
   <ItemGroup>

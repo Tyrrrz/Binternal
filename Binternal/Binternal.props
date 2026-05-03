@@ -5,12 +5,12 @@
 >
   <PropertyGroup>
     <TaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'"
-      >$(MSBuildThisFileDirectory)/../tasks/netstandard2.0/Binline.dll</TaskAssembly
+      >$(MSBuildThisFileDirectory)/../tasks/netstandard2.0/Binternal.dll</TaskAssembly
     >
     <TaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'"
-      >$(MSBuildThisFileDirectory)/../tasks/net472/Binline.dll</TaskAssembly
+      >$(MSBuildThisFileDirectory)/../tasks/net472/Binternal.dll</TaskAssembly
     >
   </PropertyGroup>
 
-  <UsingTask TaskName="Binline.BinlineTask" AssemblyFile="$(TaskAssembly)" />
+  <UsingTask TaskName="Binternal.BinternalTask" AssemblyFile="$(TaskAssembly)" />
 </Project>
