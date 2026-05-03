@@ -2,6 +2,22 @@
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
   ToolsVersion="4.0"
 >
+  <!-- Mark inlined package references as private so they are excluded from the generated nuspec -->
+  <Target
+    Name="_BinlineSetPrivateAssets"
+    BeforeTargets="GenerateNuspec"
+    Condition="@(PackageReference->WithMetadataValue('Inline', 'true')->Count()) > 0"
+  >
+    <ItemGroup>
+      <PackageReference
+        Condition="'%(PackageReference.Inline)' == 'true'"
+        Update="%(PackageReference.Identity)"
+      >
+        <PrivateAssets>all</PrivateAssets>
+      </PackageReference>
+    </ItemGroup>
+  </Target>
+
   <!-- Run after the build to inline marked package references -->
   <Target
     Name="_BinlineMerge"
