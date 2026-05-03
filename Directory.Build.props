@@ -1,0 +1,21 @@
+<Project>
+  <PropertyGroup>
+    <Version>0.0.0-dev</Version>
+    <Company>Tyrrrz</Company>
+    <Copyright>Copyright (C) Oleksii Holub</Copyright>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>$(Company)</Authors>
+    <Description>MSBuild extension that inlines package and project references as internal dependencies</Description>
+    <PackageTags>msbuild ilmerge ilrepack inline dependencies</PackageTags>
+    <PackageProjectUrl>https://github.com/Tyrrrz/Binline</PackageProjectUrl>
+    <PackageReleaseNotes>https://github.com/Tyrrrz/Binline/releases</PackageReleaseNotes>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+</Project>

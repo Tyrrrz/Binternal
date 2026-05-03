@@ -1,0 +1,16 @@
+<Project
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
+  ToolsVersion="4.0"
+  TreatAsLocalProperty="TaskAssembly"
+>
+  <PropertyGroup>
+    <TaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'"
+      >$(MSBuildThisFileDirectory)/../tasks/netstandard2.0/Binline.dll</TaskAssembly
+    >
+    <TaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'"
+      >$(MSBuildThisFileDirectory)/../tasks/net472/Binline.dll</TaskAssembly
+    >
+  </PropertyGroup>
+
+  <UsingTask TaskName="Binline.BinlineTask" AssemblyFile="$(TaskAssembly)" />
+</Project>
