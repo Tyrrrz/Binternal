@@ -19,7 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="ILRepack.Lib" PrivateAssets="all">
-      <!-- ILRepack.Lib targets net45 but its API is compatible with netstandard2.0 -->
+      <!-- ILRepack.Lib targets net472 but its API is compatible with netstandard2.0 -->
       <NoWarn>NU1701</NoWarn>
     </PackageReference>
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="all" />
