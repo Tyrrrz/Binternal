@@ -2,33 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Binline.Utils;
 using ILRepacking;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using MsbuildTask = Microsoft.Build.Utilities.Task;
 
 namespace Binline;
-
-internal sealed class MsbuildILRepackLogger : ILRepacking.ILogger
-{
-    private readonly TaskLoggingHelper _log;
-
-    public MsbuildILRepackLogger(TaskLoggingHelper log) => _log = log;
-
-    public bool ShouldLogVerbose { get; set; }
-
-    public void Error(string msg) => _log.LogError("{0}", msg);
-
-    public void Warn(string msg) => _log.LogWarning("{0}", msg);
-
-    public void Info(string msg) => _log.LogMessage(MessageImportance.Normal, "{0}", msg);
-
-    public void Verbose(string msg)
-    {
-        if (ShouldLogVerbose)
-            _log.LogMessage(MessageImportance.Low, "{0}", msg);
-    }
-}
 
 public class BinlineTask : MsbuildTask
 {
@@ -41,31 +21,29 @@ public class BinlineTask : MsbuildTask
     [Required]
     public ITaskItem[] ReferenceCopyLocalPaths { get; set; } = [];
 
-    public string? OutputDirectory { get; set; }
-
-    private IReadOnlyList<string> ResolveBinlineAssemblies()
+    private IReadOnlyList<string> ResolveInlinedAssemblies()
     {
         // Collect package IDs that are marked for inlining
-        var binlinePackageIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var inlinedPackageIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var packageRef in PackageReferences)
         {
-            var binlineValue = packageRef.GetMetadata("Binline");
-            if (string.Equals(binlineValue, "true", StringComparison.OrdinalIgnoreCase))
-                binlinePackageIds.Add(packageRef.ItemSpec);
+            var inlineValue = packageRef.GetMetadata("Inline");
+            if (string.Equals(inlineValue, "true", StringComparison.OrdinalIgnoreCase))
+                inlinedPackageIds.Add(packageRef.ItemSpec);
         }
 
-        if (binlinePackageIds.Count == 0)
+        if (inlinedPackageIds.Count == 0)
             return Array.Empty<string>();
 
         // Find DLLs belonging to the marked packages
-        var binlineAssemblies = new List<string>();
+        var inlinedAssemblies = new List<string>();
         foreach (var reference in ReferenceCopyLocalPaths)
         {
             var nugetPackageId = reference.GetMetadata("NuGetPackageId");
             if (string.IsNullOrEmpty(nugetPackageId))
                 continue;
 
-            if (!binlinePackageIds.Contains(nugetPackageId))
+            if (!inlinedPackageIds.Contains(nugetPackageId))
                 continue;
 
             var path = reference.GetMetadata("FullPath");
@@ -85,38 +63,38 @@ public class BinlineTask : MsbuildTask
                 continue;
             }
 
-            binlineAssemblies.Add(path);
+            inlinedAssemblies.Add(path);
         }
 
-        return binlineAssemblies;
+        return inlinedAssemblies;
     }
 
     public override bool Execute()
     {
-        var binlineAssemblies = ResolveBinlineAssemblies();
+        var inlinedAssemblies = ResolveInlinedAssemblies();
 
-        if (binlineAssemblies.Count == 0)
+        if (inlinedAssemblies.Count == 0)
             return true;
 
         Log.LogMessage(
             MessageImportance.High,
             "Binline: Inlining {0} assembly(-ies) into '{1}'.",
-            binlineAssemblies.Count,
+            inlinedAssemblies.Count,
             TargetAssembly
         );
 
-        foreach (var asm in binlineAssemblies)
+        foreach (var asm in inlinedAssemblies)
             Log.LogMessage(MessageImportance.Normal, "Binline: Inlining '{0}'.", asm);
 
-        var inputAssemblies = new[] { TargetAssembly }.Concat(binlineAssemblies).ToArray();
-        var searchDirectories = new[] { Path.GetDirectoryName(TargetAssembly) ?? string.Empty };
+        var outputDirectory = Path.GetDirectoryName(TargetAssembly) ?? string.Empty;
+        var inputAssemblies = new[] { TargetAssembly }.Concat(inlinedAssemblies).ToArray();
 
         var options = new RepackOptions
         {
             OutputFile = TargetAssembly,
             InputAssemblies = inputAssemblies,
             Internalize = true,
-            SearchDirectories = searchDirectories,
+            SearchDirectories = new[] { outputDirectory },
             // Disables ILRepack's built-in console logging; output is handled via MsbuildILRepackLogger
             Log = false,
         };
@@ -134,40 +112,37 @@ public class BinlineTask : MsbuildTask
         }
 
         // Remove the now-inlined assemblies from the output directory
-        if (!string.IsNullOrEmpty(OutputDirectory))
+        foreach (var asmPath in inlinedAssemblies)
         {
-            foreach (var asmPath in binlineAssemblies)
+            var asmFileName = Path.GetFileName(asmPath);
+            var outputPath = Path.Combine(outputDirectory, asmFileName);
+
+            if (!File.Exists(outputPath))
+                continue;
+
+            // Don't delete if it's the same file as the source (edge case)
+            if (string.Equals(
+                    Path.GetFullPath(outputPath),
+                    Path.GetFullPath(asmPath),
+                    StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            try
             {
-                var asmFileName = Path.GetFileName(asmPath);
-                var outputPath = Path.Combine(OutputDirectory, asmFileName);
-
-                if (!File.Exists(outputPath))
-                    continue;
-
-                // Don't delete if it's the same file as the source (edge case)
-                if (string.Equals(
-                        Path.GetFullPath(outputPath),
-                        Path.GetFullPath(asmPath),
-                        StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                try
-                {
-                    File.Delete(outputPath);
-                    Log.LogMessage(
-                        MessageImportance.Normal,
-                        "Binline: Removed inlined assembly '{0}' from output.",
-                        asmFileName
-                    );
-                }
-                catch (Exception ex)
-                {
-                    Log.LogWarning(
-                        "Binline: Could not remove inlined assembly '{0}': {1}",
-                        asmFileName,
-                        ex.Message
-                    );
-                }
+                File.Delete(outputPath);
+                Log.LogMessage(
+                    MessageImportance.Normal,
+                    "Binline: Removed inlined assembly '{0}' from output.",
+                    asmFileName
+                );
+            }
+            catch (Exception ex)
+            {
+                Log.LogWarning(
+                    "Binline: Could not remove inlined assembly '{0}': {1}",
+                    asmFileName,
+                    ex.Message
+                );
             }
         }
 
@@ -175,3 +150,4 @@ public class BinlineTask : MsbuildTask
         return true;
     }
 }
+

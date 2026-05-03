@@ -8,14 +8,12 @@
 
 ## Usage
 
-Mark a `PackageReference` or `ProjectReference` with `<Binline>true</Binline>` to inline it into your assembly:
+Mark a `PackageReference` or `ProjectReference` with `Inline="true"` to inline it into your assembly:
 
 ```xml
 <ItemGroup>
   <!-- Inline JsonExtensions — its types become internal to your assembly -->
-  <PackageReference Include="JsonExtensions" Version="1.1.0">
-    <Binline>true</Binline>
-  </PackageReference>
+  <PackageReference Include="JsonExtensions" Version="1.1.0" Inline="true" />
 </ItemGroup>
 ```
 

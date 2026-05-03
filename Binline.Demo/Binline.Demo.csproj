@@ -10,8 +10,6 @@
 
   <ItemGroup>
     <!-- Example: inline Newtonsoft.Json as an internal dependency -->
-    <PackageReference Include="Newtonsoft.Json">
-      <Binline>true</Binline>
-    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Inline="true" />
   </ItemGroup>
 </Project>

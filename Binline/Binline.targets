@@ -6,13 +6,12 @@
   <Target
     Name="_BinlineMerge"
     AfterTargets="Build"
-    Condition="@(PackageReference->WithMetadataValue('Binline', 'true')->Count()) > 0"
+    Condition="@(PackageReference->WithMetadataValue('Inline', 'true')->Count()) > 0"
   >
     <BinlineTask
       TargetAssembly="$(TargetPath)"
       PackageReferences="@(PackageReference)"
       ReferenceCopyLocalPaths="@(ReferenceCopyLocalPaths)"
-      OutputDirectory="$(OutDir)"
     />
   </Target>
 </Project>
