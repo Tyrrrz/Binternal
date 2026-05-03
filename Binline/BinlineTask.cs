@@ -117,6 +117,7 @@ public class BinlineTask : MsbuildTask
             InputAssemblies = inputAssemblies,
             Internalize = true,
             SearchDirectories = searchDirectories,
+            // Disables ILRepack's built-in console logging; output is handled via MsbuildILRepackLogger
             Log = false,
         };
 
