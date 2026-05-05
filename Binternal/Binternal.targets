@@ -18,15 +18,16 @@
     </ItemGroup>
   </Target>
 
-  <!-- Run after the build to internalize marked package references -->
+  <!-- Run after the build to internalize marked package/project references -->
   <Target
     Name="_BinternalMerge"
     AfterTargets="Build"
-    Condition="@(PackageReference->WithMetadataValue('Internalize', 'true')->Count()) > 0"
+    Condition="@(PackageReference->WithMetadataValue('Internalize', 'true')->Count()) > 0 Or @(ProjectReference->WithMetadataValue('Internalize', 'true')->Count()) > 0"
   >
     <BinternalTask
       TargetAssembly="$(TargetPath)"
       PackageReferences="@(PackageReference)"
+      ProjectReferences="@(ProjectReference)"
       ReferenceCopyLocalPaths="@(ReferenceCopyLocalPaths)"
     />
   </Target>

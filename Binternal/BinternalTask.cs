@@ -18,6 +18,8 @@ public class BinternalTask : MsbuildTask
     [Required]
     public ITaskItem[] PackageReferences { get; set; } = [];
 
+    public ITaskItem[] ProjectReferences { get; set; } = [];
+
     [Required]
     public ITaskItem[] ReferenceCopyLocalPaths { get; set; } = [];
 
@@ -32,20 +34,28 @@ public class BinternalTask : MsbuildTask
                 internalizedPackageIds.Add(packageRef.ItemSpec);
         }
 
-        if (internalizedPackageIds.Count == 0)
+        // Collect expected output DLL names for project references marked for internalization
+        var internalizedProjectDllNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var projectRef in ProjectReferences)
+        {
+            var internalizeValue = projectRef.GetMetadata("Internalize");
+            if (!string.Equals(internalizeValue, "true", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            // The output assembly name matches the project file name (without extension)
+            var projectFileName = Path.GetFileNameWithoutExtension(projectRef.ItemSpec);
+            if (!string.IsNullOrEmpty(projectFileName))
+                internalizedProjectDllNames.Add(projectFileName + ".dll");
+        }
+
+        if (internalizedPackageIds.Count == 0 && internalizedProjectDllNames.Count == 0)
             return Array.Empty<string>();
 
-        // Find DLLs belonging to the marked packages
+        // Find DLLs belonging to the marked packages or project references
         var internalizedAssemblies = new List<string>();
         foreach (var reference in ReferenceCopyLocalPaths)
         {
-            var nugetPackageId = reference.GetMetadata("NuGetPackageId");
-            if (string.IsNullOrEmpty(nugetPackageId))
-                continue;
-
-            if (!internalizedPackageIds.Contains(nugetPackageId))
-                continue;
-
+            string? sourceLabel;
             var path = reference.GetMetadata("FullPath");
             if (string.IsNullOrEmpty(path))
                 path = reference.ItemSpec;
@@ -53,12 +63,28 @@ public class BinternalTask : MsbuildTask
             if (!string.Equals(Path.GetExtension(path), ".dll", StringComparison.OrdinalIgnoreCase))
                 continue;
 
+            var nugetPackageId = reference.GetMetadata("NuGetPackageId");
+            if (!string.IsNullOrEmpty(nugetPackageId) && internalizedPackageIds.Contains(nugetPackageId))
+            {
+                sourceLabel = $"package '{nugetPackageId}'";
+            }
+            else if (string.IsNullOrEmpty(nugetPackageId) && internalizedProjectDllNames.Contains(Path.GetFileName(path)))
+            {
+                // Note: matching by DLL filename assumes the project's AssemblyName matches its filename.
+                // Projects with a custom <AssemblyName> must not use this feature.
+                sourceLabel = $"project reference '{Path.GetFileNameWithoutExtension(path)}'";
+            }
+            else
+            {
+                continue;
+            }
+
             if (!File.Exists(path))
             {
                 Log.LogWarning(
-                    "Binternal: Could not find assembly '{0}' from package '{1}'.",
+                    "Binternal: Could not find assembly '{0}' from {1}.",
                     path,
-                    nugetPackageId
+                    sourceLabel
                 );
                 continue;
             }
