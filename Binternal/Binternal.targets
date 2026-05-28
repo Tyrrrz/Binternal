@@ -6,7 +6,6 @@
   <Target
     Name="_BinternalSetPrivateAssets"
     BeforeTargets="GenerateNuspec"
-    Condition="@(PackageReference->WithMetadataValue('Internalize', 'true')->Count()) > 0"
   >
     <ItemGroup>
       <PackageReference
@@ -22,7 +21,6 @@
   <Target
     Name="_BinternalMerge"
     AfterTargets="Build"
-    Condition="@(PackageReference->WithMetadataValue('Internalize', 'true')->Count()) > 0 Or @(ProjectReference->WithMetadataValue('Internalize', 'true')->Count()) > 0"
   >
     <BinternalTask
       TargetAssembly="$(TargetPath)"
