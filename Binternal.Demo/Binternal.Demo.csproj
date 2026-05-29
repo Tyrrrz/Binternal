@@ -1,15 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <!-- Props/targets are automatically imported by NuGet, but here we need to do it manually. -->
+  <!-- This needs to be done before any other props or targets, to match NuGet's behavior. -->
+  <Import Project="../Binternal/Binternal.Local.props" />
+  <Import Project="../Binternal/Binternal.targets" />
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net10.0</TargetFramework>
   </PropertyGroup>
 
-  <!-- Import the local Binternal props for development/testing -->
-  <Import Project="../Binternal/Binternal.Local.props" />
-  <Import Project="../Binternal/Binternal.targets" />
-
   <ItemGroup>
-    <!-- Example: internalize Newtonsoft.Json as an internal dependency -->
+    <!-- Example: internalize Newtonsoft.Json -->
     <PackageReference Include="Newtonsoft.Json" Internalize="true" />
   </ItemGroup>
 </Project>
