@@ -9,7 +9,7 @@
   >
     <ItemGroup>
       <PackageReference
-        Condition="'%(PackageReference.Internalize)' != '' and $([System.Convert]::ToBoolean('%(PackageReference.Internalize)'))"
+        Condition="'%(PackageReference.Internalize)' == 'true'"
         Update="%(PackageReference.Identity)"
       >
         <PrivateAssets>all</PrivateAssets>
