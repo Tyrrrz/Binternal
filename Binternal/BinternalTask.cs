@@ -133,7 +133,8 @@ public class BinternalTask : MsbuildTask
         }
         catch (Exception ex)
         {
-            Log.LogError("Binternal: Failed to internalize assemblies: {0}", ex.Message);
+            Log.LogError("Binternal: Failed to internalize assemblies.");
+            Log.LogErrorFromException(ex, true);
             return false;
         }
 
