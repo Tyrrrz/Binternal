@@ -46,9 +46,9 @@ In order to internalize a dependency, mark its corresponding `PackageReference` 
   <PackageReference Include="Binternal" PrivateAssets="all" />
 
   <!-- This package will be merged with internal visibility into the output assembly -->
-  <PackageReference Include="JsonExtensions" Internalize="true" />
+  <PackageReference Include="Newtonsoft.Json" Internalize="true" />
 </ItemGroup>
 ```
 
-When the project is built, `JsonExtensions.dll`, along with all of its transitive dependencies, will be merged into the output assembly.
+When the project is built, `Newtonsoft.Json.dll`, along with all of its transitive dependencies, will be merged into the output assembly.
 Public members exposed by this package will also be converted into internal members, so that they don't surface beyond the assembly's own consumers.
