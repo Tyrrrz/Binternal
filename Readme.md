@@ -18,7 +18,7 @@
     <img src="favicon.png" alt="Icon" />
 </p>
 
-**Binternal** is an MSBuild extension that internalizes package and project references by merging their types directly into your assembly as internal APIs.
+**Binternal** is an MSBuild extension that internalizes package and project references by merging their types directly into the consuming assembly as internal APIs.
 
 ## Terms of use<sup>[[?]](https://github.com/Tyrrrz/.github/blob/prime/docs/why-so-political.md)</sup>
 
@@ -45,25 +45,5 @@ Mark a `PackageReference` or `ProjectReference` with `Internalize="true"` to mer
 </ItemGroup>
 ```
 
-After building, the marked dependency's types are merged into your output assembly with **internal** visibility, and the original DLL is removed from the output directory.
-When packaging a library, internalized references are automatically excluded from the generated nuspec, so consumers of your package will not see them as dependencies.
-
-### Project references
-
-`ProjectReference` items can be internalized in the same way:
-
-```xml
-<ItemGroup>
-  <ProjectReference Include="..\MyUtils\MyUtils.csproj" Internalize="true" />
-</ItemGroup>
-```
-
-### How it works
-
-Binternal hooks into the MSBuild `AfterBuild` target and uses [ILRepack](https://github.com/gluck/il-repack) to merge the marked assemblies into your output assembly, converting all public types from the merged assemblies to internal.
-
-### Use cases
-
-- Distributing a library that depends on small utility packages without exposing them to consumers
-- Keeping a single-file output for tools or libraries
-- Embedding utility libraries (e.g. `JsonExtensions`, `PolyShim`) inside your assembly
+After building, the marked dependency's types are merged into your output assembly with **internal** visibility, and the original `dll` file is removed from the output directory.
+When packaging a library, internalized references are automatically excluded from the generated nuspec, so downstream package consumers will not see them as dependencies.
