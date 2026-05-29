@@ -9,7 +9,7 @@
   >
     <ItemGroup>
       <PackageReference
-        Condition="'%(PackageReference.Internalize)' == 'true'"
+        Condition="'%(PackageReference.Internalize)' != '' and %(PackageReference.Internalize)"
         Update="%(PackageReference.Identity)"
       >
         <PrivateAssets>all</PrivateAssets>
