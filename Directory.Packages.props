@@ -4,9 +4,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageVersion Include="CSharpier.MSBuild" Version="1.2.6" />
     <PackageVersion Include="ILRepack.Lib" Version="2.0.44" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.14.28" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="17.14.28" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="PolyShim" Version="2.11.0" />
+    <PackageVersion Include="PowerKit" Version="1.2.0" />
   </ItemGroup>
 </Project>

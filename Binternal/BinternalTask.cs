@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Binternal.Utils;
 using ILRepacking;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using PowerKit.Extensions;
 using MsbuildTask = Microsoft.Build.Utilities.Task;
 
 namespace Binternal;
@@ -26,30 +22,34 @@ public class BinternalTask : MsbuildTask
     private IReadOnlyList<string> ResolveInternalizedAssemblies()
     {
         // Collect package IDs that are marked for internalization
-        var internalizedPackageIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var packageRef in PackageReferences)
-        {
-            var internalizeValue = packageRef.GetMetadata("Internalize");
-            if (string.Equals(internalizeValue, "true", StringComparison.OrdinalIgnoreCase))
-                internalizedPackageIds.Add(packageRef.ItemSpec);
-        }
+        var internalizedPackageIds = PackageReferences
+            .Where(r =>
+                string.Equals(
+                    r.GetMetadata("Internalize"),
+                    "true",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .Select(r => r.ItemSpec)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         // Collect expected output DLL names for project references marked for internalization
-        var internalizedProjectDllNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var projectRef in ProjectReferences)
-        {
-            var internalizeValue = projectRef.GetMetadata("Internalize");
-            if (!string.Equals(internalizeValue, "true", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            // The output assembly name matches the project file name (without extension)
-            var projectFileName = Path.GetFileNameWithoutExtension(projectRef.ItemSpec);
-            if (!string.IsNullOrEmpty(projectFileName))
-                internalizedProjectDllNames.Add(projectFileName + ".dll");
-        }
+        // The output assembly name matches the project file name (without extension)
+        var internalizedProjectDllNames = ProjectReferences
+            .Where(r =>
+                string.Equals(
+                    r.GetMetadata("Internalize"),
+                    "true",
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            .Select(r => Path.GetFileNameWithoutExtension(r.ItemSpec))
+            .WhereNotNullOrEmpty()
+            .Select(n => n + ".dll")
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         if (internalizedPackageIds.Count == 0 && internalizedProjectDllNames.Count == 0)
-            return Array.Empty<string>();
+            return [];
 
         // Find DLLs belonging to the marked packages or project references
         var internalizedAssemblies = new List<string>();
@@ -64,11 +64,17 @@ public class BinternalTask : MsbuildTask
                 continue;
 
             var nugetPackageId = reference.GetMetadata("NuGetPackageId");
-            if (!string.IsNullOrEmpty(nugetPackageId) && internalizedPackageIds.Contains(nugetPackageId))
+            if (
+                !string.IsNullOrEmpty(nugetPackageId)
+                && internalizedPackageIds.Contains(nugetPackageId)
+            )
             {
                 sourceLabel = $"package '{nugetPackageId}'";
             }
-            else if (string.IsNullOrEmpty(nugetPackageId) && internalizedProjectDllNames.Contains(Path.GetFileName(path)))
+            else if (
+                string.IsNullOrEmpty(nugetPackageId)
+                && internalizedProjectDllNames.Contains(Path.GetFileName(path))
+            )
             {
                 // Note: matching by DLL filename assumes the project's AssemblyName matches its filename.
                 // Projects with a custom <AssemblyName> must not use this feature.
@@ -113,21 +119,22 @@ public class BinternalTask : MsbuildTask
             Log.LogMessage(MessageImportance.Normal, "Binternal: Internalizing '{0}'.", asm);
 
         var outputDirectory = Path.GetDirectoryName(TargetAssembly) ?? string.Empty;
-        var inputAssemblies = new[] { TargetAssembly }.Concat(internalizedAssemblies).ToArray();
+        var inputAssemblies = internalizedAssemblies.Prepend(TargetAssembly).ToArray();
 
         var options = new RepackOptions
         {
             OutputFile = TargetAssembly,
             InputAssemblies = inputAssemblies,
             Internalize = true,
-            SearchDirectories = new[] { outputDirectory },
-            // Disables ILRepack's built-in console logging; output is handled via MsbuildILRepackLogger
+            SearchDirectories = [outputDirectory],
+            // Disable ILRepack's built-in console logging.
+            // Output will be handled by MsbuildILRepackLogger later.
             Log = false,
         };
 
         try
         {
-            var logger = new MsbuildILRepackLogger(Log);
+            var logger = new ILRepackToMSBuildLogger(Log);
             var repack = new ILRepack(options, logger);
             repack.Repack();
         }
@@ -148,11 +155,16 @@ public class BinternalTask : MsbuildTask
                 continue;
 
             // Don't delete if it's the same file as the source (edge case)
-            if (string.Equals(
+            if (
+                string.Equals(
                     Path.GetFullPath(outputPath),
                     Path.GetFullPath(asmPath),
-                    StringComparison.OrdinalIgnoreCase))
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
+            {
                 continue;
+            }
 
             try
             {
@@ -173,8 +185,11 @@ public class BinternalTask : MsbuildTask
             }
         }
 
-        Log.LogMessage(MessageImportance.High, "Binternal: Internalization completed successfully.");
+        Log.LogMessage(
+            MessageImportance.High,
+            "Binternal: Internalization completed successfully."
+        );
+
         return true;
     }
 }
-

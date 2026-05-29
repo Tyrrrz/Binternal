@@ -1,10 +1,9 @@
-using ILRepacking;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Binternal.Utils;
 
-internal sealed class MsbuildILRepackLogger(TaskLoggingHelper log) : ILRepacking.ILogger
+internal sealed class ILRepackToMSBuildLogger(TaskLoggingHelper log) : ILRepacking.ILogger
 {
     public bool ShouldLogVerbose { get; set; }
 
@@ -12,7 +11,7 @@ internal sealed class MsbuildILRepackLogger(TaskLoggingHelper log) : ILRepacking
 
     public void Warn(string msg) => log.LogWarning("{0}", msg);
 
-    public void Info(string msg) => log.LogMessage(MessageImportance.Normal, "{0}", msg);
+    public void Info(string msg) => log.LogMessage("{0}", msg);
 
     public void Verbose(string msg)
     {

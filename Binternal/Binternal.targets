@@ -1,12 +1,6 @@
-<Project
-  xmlns="http://schemas.microsoft.com/developer/msbuild/2003"
-  ToolsVersion="4.0"
->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <!-- Mark internalized package references as private so they are excluded from the generated nuspec -->
-  <Target
-    Name="_BinternalSetPrivateAssets"
-    BeforeTargets="GenerateNuspec"
-  >
+  <Target Name="_BinternalSetPrivateAssets" BeforeTargets="GenerateNuspec">
     <ItemGroup>
       <PackageReference
         Condition="'%(PackageReference.Internalize)' != '' and %(PackageReference.Internalize)"
@@ -18,10 +12,7 @@
   </Target>
 
   <!-- Run after the build to internalize marked package/project references -->
-  <Target
-    Name="_BinternalMerge"
-    AfterTargets="Build"
-  >
+  <Target Name="_BinternalMerge" AfterTargets="Build">
     <BinternalTask
       TargetAssembly="$(TargetPath)"
       PackageReferences="@(PackageReference)"
