@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+
+  <!-- Import the local Binternal props for development/testing -->
+  <Import Project="../Binternal/Binternal.Local.props" />
+  <Import Project="../Binternal/Binternal.targets" />
+
+  <ItemGroup>
+    <!-- Example: internalize Newtonsoft.Json as an internal dependency -->
+    <PackageReference Include="Newtonsoft.Json" Internalize="true" />
+  </ItemGroup>
+</Project>
