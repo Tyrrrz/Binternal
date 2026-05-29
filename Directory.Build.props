@@ -12,7 +12,7 @@
 
   <PropertyGroup>
     <Authors>$(Company)</Authors>
-    <Description>MSBuild extension that internalizes package and project references as internal dependencies</Description>
+    <Description>MSBuild extension that lets you internalize package and project references by merging them into the output assembly as internal APIs</Description>
     <PackageTags>msbuild ilmerge ilrepack internalize dependencies</PackageTags>
     <PackageProjectUrl>https://github.com/Tyrrrz/Binternal</PackageProjectUrl>
     <PackageReleaseNotes>https://github.com/Tyrrrz/Binternal/releases</PackageReleaseNotes>
