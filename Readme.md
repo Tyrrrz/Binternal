@@ -18,7 +18,8 @@
     <img src="favicon.png" alt="Icon" />
 </p>
 
-**Binternal** is an MSBuild extension that internalizes package and project references by merging their types directly into the consuming assembly as internal APIs.
+**Binternal** is an MSBuild extension that lets you _internalize_ package and project references by merging them into the output assembly as internal APIs.
+This effectively allows you to mark any dependency as a development dependency, even if it provides functionality at run time — which is particularly useful when authoring Roslyn source generators, build tasks, or in other contexts where regular resolution mechanisms are not available.
 
 ## Terms of use<sup>[[?]](https://github.com/Tyrrrz/.github/blob/prime/docs/why-so-political.md)</sup>
 
@@ -37,13 +38,17 @@ To learn more about the war and how you can help, [click here](https://tyrrrz.me
 
 ## Usage
 
-Mark a `PackageReference` or `ProjectReference` with `Internalize="true"` to merge it into your assembly as internal types:
+In order to internalize a dependency, mark its corresponding `PackageReference` or `ProjectReference` with the `Internalize` attribute set to `true`:
 
 ```xml
 <ItemGroup>
-  <PackageReference Include="JsonExtensions" Version="1.1.0" Internalize="true" />
+  <!-- Add the Binternal package to enable support for the Internalize attribute -->
+  <PackageReference Include="Binternal" PrivateAssets="all" />
+
+  <!-- This package will be merged with internal visibility into the output assembly -->
+  <PackageReference Include="JsonExtensions" Internalize="true" />
 </ItemGroup>
 ```
 
-After building, the marked dependency's types are merged into your output assembly with **internal** visibility, and the original `dll` file is removed from the output directory.
-When packaging a library, internalized references are automatically excluded from the generated nuspec, so downstream package consumers will not see them as dependencies.
+When the project is built, `JsonExtensions.dll`, along with all of its transitive dependencies, will be merged into the output assembly.
+Public members exposed by this package will also be converted into internal members, so that they don't surface beyond the assembly's own consumers.
