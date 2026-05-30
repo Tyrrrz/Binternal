@@ -16,7 +16,7 @@
     <BinternalTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
-      ReferenceCopyLocalPaths="@(ReferenceCopyLocalPaths)"
+      ReferenceCopyLocalPaths="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$(TargetPath)"
     />
   </Target>

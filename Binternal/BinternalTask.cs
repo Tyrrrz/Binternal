@@ -59,13 +59,12 @@ public class BinternalTask : MsbuildTask
 
         return ReferenceCopyLocalPaths
             .Where(r =>
-            {
-                var nugetPackageId = r.GetMetadata("NuGetPackageId");
-                return !string.IsNullOrWhiteSpace(nugetPackageId)
-                    && packageIds.Contains(nugetPackageId);
-            })
-            .Select(r => r.GetMetadata("FullPath") ?? r.ItemSpec)
+                r.GetMetadata("NuGetPackageId")?.NullIfWhiteSpace() is { } packageId
+                && packageIds.Contains(packageId)
+            )
+            .Select(r => r.GetMetadata("FullPath")?.NullIfWhiteSpace() ?? r.ItemSpec)
             .WhereNotNullOrWhiteSpace()
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
 
@@ -75,25 +74,18 @@ public class BinternalTask : MsbuildTask
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         return ReferenceCopyLocalPaths
-            .Where(r =>
-            {
-                // Must not be a package reference
-                var nugetPackageId = r.GetMetadata("NuGetPackageId");
-                if (!string.IsNullOrWhiteSpace(nugetPackageId))
-                    return false;
-
-                var fileName = Path.GetFileName(r.GetMetadata("FullPath") ?? r.ItemSpec);
-                return !string.IsNullOrWhiteSpace(fileName)
-                    && projectNames.Contains(Path.GetFileNameWithoutExtension(fileName));
-            })
-            .Select(r => r.GetMetadata("FullPath") ?? r.ItemSpec)
+            .Where(r => r.GetMetadata("NuGetPackageId").NullIfWhiteSpace() is null)
+            .Select(r => r.GetMetadata("FullPath")?.NullIfWhiteSpace() ?? r.ItemSpec)
             .WhereNotNullOrWhiteSpace()
+            .Where(p => projectNames.Contains(Path.GetFileNameWithoutExtension(p)))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
     }
 
     private IReadOnlyList<string> GetInternalizedAssemblyFilePaths() =>
         GetInternalizedPackageAssemblyFilePaths()
             .Concat(GetInternalizedProjectAssemblyFilePaths())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
     public override bool Execute()
