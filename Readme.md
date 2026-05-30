@@ -19,7 +19,7 @@
 </p>
 
 **Binternal** is an MSBuild extension that lets you _internalize_ package and project references by merging them into the output assembly as internal APIs.
-This effectively allows you to treat any dependency as a development dependency, even if it provides functionality at run time — which is particularly useful when authoring Roslyn source generators, build tasks, or in other contexts where regular resolution mechanisms are not available.
+This effectively allows you to treat any dependency as a development dependency, even if it provides run-time functionality — which is particularly useful when authoring Roslyn source generators, build tasks, or in other contexts where regular resolution mechanisms are not available.
 
 ## Terms of use<sup>[[?]](https://github.com/Tyrrrz/.github/blob/prime/docs/why-so-political.md)</sup>
 

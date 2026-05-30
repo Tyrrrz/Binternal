@@ -1,3 +1,3 @@
 # Binternal Demo
 
-This demo project showcases the usage of **Binternal**, by internalizing the **Newtonsoft.Json** package and using it to serialize a simple object to JSON.
+This demo project showcases the usage of **Binternal** by serializing a sample object to JSON via an internalized **Newtonsoft.Json** package.
