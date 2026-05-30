@@ -7,12 +7,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <PackageIcon>favicon.png</PackageIcon>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <BuildOutputTargetFolder>tasks</BuildOutputTargetFolder>
     <DevelopmentDependency>true</DevelopmentDependency>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="../favicon.png" Pack="true" PackagePath="" Visible="false" />
     <Content Include="Binternal.props" Pack="true" PackagePath="build" />
     <Content Include="Binternal.targets" Pack="true" PackagePath="build" />
   </ItemGroup>
@@ -35,7 +37,8 @@
     <PackageReference Include="PowerKit" PrivateAssets="all" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+  <!-- Required for PowerKit -->
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <Reference Include="System.IO.Compression" />
   </ItemGroup>
 
@@ -66,6 +69,26 @@
         Include="$(ProjectDepsFilePath)"
         TargetPath="$(ProjectDepsFileName)"
         FinalOutputPath="$(ProjectDepsFilePath)"
+      />
+    </ItemGroup>
+  </Target>
+
+  <!-- Expose package references to dependent projects (only needed locally, not when distributed through NuGet) -->
+  <PropertyGroup>
+    <GetTargetPathDependsOn>
+      $(GetTargetPathDependsOn);GetDependencyTargetPaths
+    </GetTargetPathDependsOn>
+  </PropertyGroup>
+
+  <Target Name="GetDependencyTargetPaths">
+    <ItemGroup>
+      <TargetPathWithTargetPlatformMoniker
+        Include="$(PKGMono_Cecil)/lib/$(TargetFramework)/*.dll"
+        IncludeRuntimeDependency="false"
+      />
+      <TargetPathWithTargetPlatformMoniker
+        Include="$(PKGRessy)/lib/$(TargetFramework)/*.dll"
+        IncludeRuntimeDependency="false"
       />
     </ItemGroup>
   </Target>
