@@ -125,20 +125,23 @@ public class BinternalTask : MsbuildTask
         foreach (var assembly in internalizedAssemblyFilePaths)
             Log.LogMessage("Internalizing '{0}'.", assembly);
 
-        var options = new RepackOptions
-        {
-            OutputFile = TargetFilePath,
-            InputAssemblies = internalizedAssemblyFilePaths.Prepend(TargetFilePath).ToArray(),
-            Internalize = true,
-            SearchDirectories = [TargetDirectoryPath],
-            // Disable ILRepack's built-in console logging since we provide a custom logger below
-            Log = false,
-        };
-
+        // Run ILRepack
         try
         {
-            var repack = new ILRepack(options, new ILRepackToMSBuildLogger(Log));
-            repack.Repack();
+            new ILRepack(
+                new RepackOptions
+                {
+                    OutputFile = TargetFilePath,
+                    InputAssemblies = internalizedAssemblyFilePaths
+                        .Prepend(TargetFilePath)
+                        .ToArray(),
+                    Internalize = true,
+                    SearchDirectories = [TargetDirectoryPath],
+                    // Disable ILRepack's built-in console logging since we provide a custom logger below
+                    Log = false,
+                },
+                new ILRepackToMSBuildLogger(Log)
+            ).Repack();
         }
         catch (Exception ex)
         {
