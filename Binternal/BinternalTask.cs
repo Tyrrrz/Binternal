@@ -117,6 +117,15 @@ public class BinternalTask : MsbuildTask
         foreach (var assembly in internalizedAssemblyFilePaths)
             Log.LogMessage("Internalizing '{0}'.", assembly);
 
+        var probeDirectoryPaths = ReferenceCopyLocalPaths
+            .Select(r => r.GetMetadata("FullPath")?.NullIfWhiteSpace() ?? r.ItemSpec)
+            .WhereNotNullOrWhiteSpace()
+            .Select(Path.GetDirectoryName)
+            .WhereNotNullOrWhiteSpace()
+            .Prepend(TargetDirectoryPath)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
         // Run ILRepack
         try
         {
@@ -128,7 +137,7 @@ public class BinternalTask : MsbuildTask
                         .Prepend(TargetFilePath)
                         .ToArray(),
                     Internalize = true,
-                    SearchDirectories = [TargetDirectoryPath],
+                    SearchDirectories = probeDirectoryPaths,
                     // Disable ILRepack's built-in console logging since we provide a custom logger below
                     Log = false,
                 },
