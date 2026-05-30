@@ -1,18 +1,13 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <!-- Mark internalized package references as private so they are excluded from package dependencies -->
-  <Target Name="Binternal_SetPrivateAssets" BeforeTargets="GenerateNuspec">
-    <ItemGroup>
-      <PackageReference
-        Condition="'%(PackageReference.Internalize)' != '' and %(PackageReference.Internalize)"
-        Update="%(PackageReference.Identity)"
-      >
-        <PrivateAssets>all</PrivateAssets>
-      </PackageReference>
-    </ItemGroup>
-  </Target>
+  <ItemGroup>
+    <PackageReference Update="@(PackageReference->WithMetadataValue('Internalize', 'true'))">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
 
   <!-- Merge package references and project references into the target assembly -->
-  <Target Name="Binternal_Merge" AfterTargets="Build">
+  <Target Name="Binternal_Merge" AfterTargets="Build" Condition="'$(TargetPath)' != ''">
     <BinternalTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
