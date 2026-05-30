@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using Binternal.Utils;
 using ILRepacking;
 using Microsoft.Build.Framework;
@@ -9,20 +13,21 @@ namespace Binternal;
 public class BinternalTask : MsbuildTask
 {
     [Required]
-    public string TargetAssembly { get; set; } = "";
-
-    [Required]
     public ITaskItem[] PackageReferences { get; set; } = [];
 
+    [Required]
     public ITaskItem[] ProjectReferences { get; set; } = [];
 
     [Required]
     public ITaskItem[] ReferenceCopyLocalPaths { get; set; } = [];
 
-    private IReadOnlyList<string> ResolveInternalizedAssemblies()
-    {
-        // Collect package IDs that are marked for internalization
-        var internalizedPackageIds = PackageReferences
+    [Required]
+    public required string TargetFilePath { get; set; }
+
+    private string TargetDirectoryPath => Path.GetDirectoryName(TargetFilePath) ?? string.Empty;
+
+    private IReadOnlyList<string> GetInternalizedPackageIds() =>
+        PackageReferences
             .Where(r =>
                 string.Equals(
                     r.GetMetadata("Internalize"),
@@ -31,11 +36,11 @@ public class BinternalTask : MsbuildTask
                 )
             )
             .Select(r => r.ItemSpec)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            .WhereNotNullOrWhiteSpace()
+            .ToArray();
 
-        // Collect expected output DLL names for project references marked for internalization
-        // The output assembly name matches the project file name (without extension)
-        var internalizedProjectDllNames = ProjectReferences
+    private IReadOnlyList<string> GetInternalizedProjectNames() =>
+        ProjectReferences
             .Where(r =>
                 string.Equals(
                     r.GetMetadata("Internalize"),
@@ -43,122 +48,119 @@ public class BinternalTask : MsbuildTask
                     StringComparison.OrdinalIgnoreCase
                 )
             )
-            .Select(r => Path.GetFileNameWithoutExtension(r.ItemSpec))
-            .WhereNotNullOrEmpty()
-            .Select(n => n + ".dll")
+            .Select(r => r.ItemSpec)
+            .Select(Path.GetFileNameWithoutExtension)
+            .WhereNotNullOrWhiteSpace()
+            .ToArray();
+
+    private IReadOnlyList<string> GetInternalizedPackageAssemblyFilePaths()
+    {
+        var packageIds = GetInternalizedPackageIds().ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return ReferenceCopyLocalPaths
+            .Where(r =>
+            {
+                var nugetPackageId = r.GetMetadata("NuGetPackageId");
+                return !string.IsNullOrWhiteSpace(nugetPackageId)
+                    && packageIds.Contains(nugetPackageId);
+            })
+            .Select(r => r.GetMetadata("FullPath") ?? r.ItemSpec)
+            .WhereNotNullOrWhiteSpace()
+            .ToArray();
+    }
+
+    private IReadOnlyList<string> GetInternalizedProjectAssemblyFilePaths()
+    {
+        var projectNames = GetInternalizedProjectNames()
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        if (internalizedPackageIds.Count == 0 && internalizedProjectDllNames.Count == 0)
-            return [];
-
-        // Find DLLs belonging to the marked packages or project references
-        var internalizedAssemblies = new List<string>();
-        foreach (var reference in ReferenceCopyLocalPaths)
-        {
-            string? sourceLabel;
-            var path = reference.GetMetadata("FullPath");
-            if (string.IsNullOrEmpty(path))
-                path = reference.ItemSpec;
-
-            if (!string.Equals(Path.GetExtension(path), ".dll", StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            var nugetPackageId = reference.GetMetadata("NuGetPackageId");
-            if (
-                !string.IsNullOrEmpty(nugetPackageId)
-                && internalizedPackageIds.Contains(nugetPackageId)
-            )
+        return ReferenceCopyLocalPaths
+            .Where(r =>
             {
-                sourceLabel = $"package '{nugetPackageId}'";
-            }
-            else if (
-                string.IsNullOrEmpty(nugetPackageId)
-                && internalizedProjectDllNames.Contains(Path.GetFileName(path))
-            )
-            {
-                // Note: matching by DLL filename assumes the project's AssemblyName matches its filename.
-                // Projects with a custom <AssemblyName> must not use this feature.
-                sourceLabel = $"project reference '{Path.GetFileNameWithoutExtension(path)}'";
-            }
-            else
-            {
-                continue;
-            }
+                // Must not be a package reference
+                var nugetPackageId = r.GetMetadata("NuGetPackageId");
+                if (!string.IsNullOrWhiteSpace(nugetPackageId))
+                    return false;
 
-            if (!File.Exists(path))
-            {
-                Log.LogWarning(
-                    "Binternal: Could not find assembly '{0}' from {1}.",
-                    path,
-                    sourceLabel
-                );
-                continue;
-            }
-
-            internalizedAssemblies.Add(path);
-        }
-
-        return internalizedAssemblies;
+                var fileName = Path.GetFileName(r.GetMetadata("FullPath") ?? r.ItemSpec);
+                return !string.IsNullOrWhiteSpace(fileName)
+                    && projectNames.Contains(Path.GetFileNameWithoutExtension(fileName));
+            })
+            .Select(r => r.GetMetadata("FullPath") ?? r.ItemSpec)
+            .WhereNotNullOrWhiteSpace()
+            .ToArray();
     }
+
+    private IReadOnlyList<string> GetInternalizedAssemblyFilePaths() =>
+        GetInternalizedPackageAssemblyFilePaths()
+            .Concat(GetInternalizedProjectAssemblyFilePaths())
+            .ToArray();
 
     public override bool Execute()
     {
-        var internalizedAssemblies = ResolveInternalizedAssemblies();
+        Log.LogMessage(
+            "Package references: {0}.",
+            string.Join(", ", PackageReferences.Select(r => r.ItemSpec))
+        );
+        Log.LogMessage(
+            "Project references: {0}.",
+            string.Join(", ", ProjectReferences.Select(r => r.ItemSpec))
+        );
+        Log.LogMessage(
+            "Reference paths: {0}.",
+            string.Join(", ", ReferenceCopyLocalPaths.Select(r => r.ItemSpec))
+        );
+        Log.LogMessage("Target: '{0}'.", TargetFilePath);
 
-        if (internalizedAssemblies.Count == 0)
+        var internalizedAssemblyFilePaths = GetInternalizedAssemblyFilePaths();
+        if (!internalizedAssemblyFilePaths.Any())
             return true;
 
         Log.LogMessage(
-            MessageImportance.High,
-            "Binternal: Internalizing {0} assembly(-ies) into '{1}'.",
-            internalizedAssemblies.Count,
-            TargetAssembly
+            "Internalizing {0} assembly(-ies) into '{1}'.",
+            internalizedAssemblyFilePaths.Count,
+            TargetFilePath
         );
 
-        foreach (var asm in internalizedAssemblies)
-            Log.LogMessage(MessageImportance.Normal, "Binternal: Internalizing '{0}'.", asm);
-
-        var outputDirectory = Path.GetDirectoryName(TargetAssembly) ?? string.Empty;
-        var inputAssemblies = internalizedAssemblies.Prepend(TargetAssembly).ToArray();
+        foreach (var assembly in internalizedAssemblyFilePaths)
+            Log.LogMessage("Internalizing '{0}'.", assembly);
 
         var options = new RepackOptions
         {
-            OutputFile = TargetAssembly,
-            InputAssemblies = inputAssemblies,
+            OutputFile = TargetFilePath,
+            InputAssemblies = internalizedAssemblyFilePaths.Prepend(TargetFilePath).ToArray(),
             Internalize = true,
-            SearchDirectories = [outputDirectory],
-            // Disable ILRepack's built-in console logging.
-            // Output will be handled by MsbuildILRepackLogger later.
+            SearchDirectories = [TargetDirectoryPath],
+            // Disable ILRepack's built-in console logging since we provide a custom logger below
             Log = false,
         };
 
         try
         {
-            var logger = new ILRepackToMSBuildLogger(Log);
-            var repack = new ILRepack(options, logger);
+            var repack = new ILRepack(options, new ILRepackToMSBuildLogger(Log));
             repack.Repack();
         }
         catch (Exception ex)
         {
-            Log.LogError("Binternal: Failed to internalize assemblies.");
+            Log.LogError("Failed to internalize assemblies.");
             Log.LogErrorFromException(ex, true);
             return false;
         }
 
         // Remove the now-internalized assemblies from the output directory
-        foreach (var asmPath in internalizedAssemblies)
+        foreach (var filePath in internalizedAssemblyFilePaths)
         {
-            var asmFileName = Path.GetFileName(asmPath);
-            var outputPath = Path.Combine(outputDirectory, asmFileName);
+            var fileName = Path.GetFileName(filePath);
+            var outputFilePath = Path.Combine(TargetDirectoryPath, fileName);
 
-            if (!File.Exists(outputPath))
+            if (!File.Exists(outputFilePath))
                 continue;
 
             // Don't delete if it's the same file as the source (edge case)
             if (
                 string.Equals(
-                    Path.GetFullPath(outputPath),
-                    Path.GetFullPath(asmPath),
+                    Path.GetFullPath(filePath),
+                    Path.GetFullPath(outputFilePath),
                     StringComparison.OrdinalIgnoreCase
                 )
             )
@@ -168,28 +170,23 @@ public class BinternalTask : MsbuildTask
 
             try
             {
-                File.Delete(outputPath);
+                File.Delete(outputFilePath);
                 Log.LogMessage(
-                    MessageImportance.Normal,
-                    "Binternal: Removed internalized assembly '{0}' from output.",
-                    asmFileName
+                    "Removed internalized assembly '{0}' from the output directory.",
+                    fileName
                 );
             }
             catch (Exception ex)
             {
                 Log.LogWarning(
-                    "Binternal: Could not remove internalized assembly '{0}': {1}",
-                    asmFileName,
+                    "Failed to remove internalized assembly '{0}' from the output directory: {1}",
+                    fileName,
                     ex.Message
                 );
             }
         }
 
-        Log.LogMessage(
-            MessageImportance.High,
-            "Binternal: Internalization completed successfully."
-        );
-
+        Log.LogMessage("Internalization successfully completed.");
         return true;
     }
 }
