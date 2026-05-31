@@ -13,6 +13,6 @@
     <PackageReference Include="CSharpier.MSBuild" PrivateAssets="all" />
 
     <!-- Example: internalize Newtonsoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Internalize="true" />
+    <PackageReference Include="Newtonsoft.Json" Internalize="true" PrivateAssets="all" />
   </ItemGroup>
 </Project>

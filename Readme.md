@@ -19,7 +19,7 @@
 </p>
 
 **Binternal** is an MSBuild extension that lets you _internalize_ package and project references by merging them into the output assembly as internal APIs.
-This effectively allows you to treat any dependency as a development dependency, even if it provides run-time functionality — which is particularly useful when authoring Roslyn source generators, build tasks, or in other contexts where regular resolution mechanisms are not available.
+This effectively allows you to treat any dependency as a compile-time dependency, even if it provides run-time functionality — which is particularly useful when authoring Roslyn source generators, build tasks, or in other contexts where regular resolution mechanisms may not be available.
 
 ## Terms of use<sup>[[?]](https://github.com/Tyrrrz/.github/blob/prime/docs/why-so-political.md)</sup>
 
@@ -45,10 +45,13 @@ In order to internalize a dependency, mark its corresponding `PackageReference` 
   <!-- Add the Binternal package to enable support for the Internalize attribute -->
   <PackageReference Include="Binternal" PrivateAssets="all" />
 
-  <!-- This package will be merged with internal visibility into the output assembly -->
-  <PackageReference Include="Newtonsoft.Json" Internalize="true" />
+  <!-- This package will be merged into the output assembly -->
+  <PackageReference Include="Newtonsoft.Json" Internalize="true" PrivateAssets="all" />
 </ItemGroup>
 ```
 
+> [!NOTE]
+> Remember to also add `PrivateAssets="all"` alongside `Internalize="true"` to exclude the dependency from the specification of your NuGet package, if you are creating one.
+
 When the project is built, `Newtonsoft.Json.dll`, along with all of its transitive dependencies, will be merged into the output assembly.
-Public members exposed by this package will also be converted into internal members, so that they don't surface beyond the assembly's own consumers.
+Public members exposed by this package will also be converted into internal members, preventing them from being exposed to downstream consumers.

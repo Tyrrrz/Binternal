@@ -12,5 +12,5 @@
     >
   </PropertyGroup>
 
-  <UsingTask TaskName="Binternal.BinternalTask" AssemblyFile="$(TaskAssembly)" />
+  <UsingTask TaskName="Binternal.InternalizationTask" AssemblyFile="$(TaskAssembly)" />
 </Project>

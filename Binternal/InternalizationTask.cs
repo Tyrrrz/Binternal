@@ -10,7 +10,7 @@ using MsbuildTask = Microsoft.Build.Utilities.Task;
 
 namespace Binternal;
 
-public class BinternalTask : MsbuildTask
+public class InternalizationTask : MsbuildTask
 {
     [Required]
     public ITaskItem[] PackageReferences { get; set; } = [];
@@ -19,7 +19,7 @@ public class BinternalTask : MsbuildTask
     public ITaskItem[] ProjectReferences { get; set; } = [];
 
     [Required]
-    public ITaskItem[] ReferenceCopyLocalPaths { get; set; } = [];
+    public ITaskItem[] ReferenceLocals { get; set; } = [];
 
     [Required]
     public required string TargetFilePath { get; set; }
@@ -57,7 +57,7 @@ public class BinternalTask : MsbuildTask
     {
         var packageIds = GetInternalizedPackageIds().ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return ReferenceCopyLocalPaths
+        return ReferenceLocals
             .Where(r =>
                 r.GetMetadata("NuGetPackageId")?.NullIfWhiteSpace() is { } packageId
                 && packageIds.Contains(packageId)
@@ -73,7 +73,7 @@ public class BinternalTask : MsbuildTask
         var projectNames = GetInternalizedProjectNames()
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return ReferenceCopyLocalPaths
+        return ReferenceLocals
             .Where(r => r.GetMetadata("NuGetPackageId").NullIfWhiteSpace() is null)
             .Select(r => r.GetMetadata("FullPath")?.NullIfWhiteSpace() ?? r.ItemSpec)
             .WhereNotNullOrWhiteSpace()
@@ -99,8 +99,8 @@ public class BinternalTask : MsbuildTask
             string.Join(", ", ProjectReferences.Select(r => r.ItemSpec))
         );
         Log.LogMessage(
-            "Reference paths: {0}.",
-            string.Join(", ", ReferenceCopyLocalPaths.Select(r => r.ItemSpec))
+            "Reference locals: {0}.",
+            string.Join(", ", ReferenceLocals.Select(r => r.ItemSpec))
         );
         Log.LogMessage("Target: '{0}'.", TargetFilePath);
 
@@ -117,15 +117,6 @@ public class BinternalTask : MsbuildTask
         foreach (var assembly in internalizedAssemblyFilePaths)
             Log.LogMessage("Internalizing '{0}'.", assembly);
 
-        var probeDirectoryPaths = ReferenceCopyLocalPaths
-            .Select(r => r.GetMetadata("FullPath")?.NullIfWhiteSpace() ?? r.ItemSpec)
-            .WhereNotNullOrWhiteSpace()
-            .Select(Path.GetDirectoryName)
-            .WhereNotNullOrWhiteSpace()
-            .Prepend(TargetDirectoryPath)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
         // Run ILRepack
         try
         {
@@ -137,7 +128,15 @@ public class BinternalTask : MsbuildTask
                         .Prepend(TargetFilePath)
                         .ToArray(),
                     Internalize = true,
-                    SearchDirectories = probeDirectoryPaths,
+                    // All directories where the internalized assemblies and their dependencies may be located
+                    SearchDirectories = ReferenceLocals
+                        .Select(r => r.GetMetadata("FullPath")?.NullIfWhiteSpace() ?? r.ItemSpec)
+                        .WhereNotNullOrWhiteSpace()
+                        .Select(Path.GetDirectoryName)
+                        .WhereNotNullOrWhiteSpace()
+                        .Prepend(TargetDirectoryPath)
+                        .Distinct(StringComparer.OrdinalIgnoreCase)
+                        .ToArray(),
                     // Disable ILRepack's built-in console logging since we provide a custom logger below
                     Log = false,
                 },
