@@ -19,7 +19,7 @@
 </p>
 
 **Binternal** is an MSBuild extension that lets you _internalize_ package and project references by merging them into the output assembly as internal APIs.
-This effectively allows you to treat any dependency as a compile-time dependency, even if it provides run-time functionality — which is particularly useful in development contexts where regular dependency resolution mechanisms may not be available, such as Roslyn plugins, build tasks, and other similar scenarios.
+This effectively allows you to treat any dependency as a private implementation detail, which can be useful to reduce the exposed surface area of your package or when targeting execution scenarios where proper dependency resolution is not available.
 
 ## Terms of use<sup>[[?]](https://github.com/Tyrrrz/.github/blob/prime/docs/why-so-political.md)</sup>
 
@@ -46,12 +46,13 @@ In order to internalize a dependency, mark its corresponding `PackageReference` 
   <PackageReference Include="Binternal" PrivateAssets="all" />
 
   <!-- This package will be merged into the output assembly -->
-  <PackageReference Include="Newtonsoft.Json" Internalize="true" PrivateAssets="all" />
+  <PackageReference Include="CliWrap" Internalize="true" PrivateAssets="all" />
 </ItemGroup>
 ```
 
 > [!NOTE]
-> Remember to also add `PrivateAssets="all"` alongside `Internalize="true"` to exclude the dependency from the specification of your NuGet package, if you are creating one.
+> Consider also adding the `PrivateAssets="all"` attribute to references that are being internalized.
+> This will make sure they are not passed as transitive dependencies to downstream consumers, which is important if you're building a NuGet package.
 
-When the project is built, `Newtonsoft.Json.dll`, along with all of its transitive dependencies, will be merged into the output assembly.
-Public members exposed by this package will also be converted into internal members, preventing them from being exposed to downstream consumers.
+When the above project is built, `CliWrap.dll`, along with all of its own dependencies, will be merged into the output assembly.
+Public members exposed by this package will be converted into internal members, preventing them from being accessed by outside callers.
