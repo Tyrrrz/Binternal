@@ -1,26 +1,18 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-  <Target
-    Name="Binternal_InternalizeAfterBuild"
-    AfterTargets="Build"
-    Condition="'$(TargetPath)' != ''"
-  >
+  <Target Name="Binternal_InternalizeAfterBuild" AfterTargets="Build">
     <InternalizationTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
-      ReferenceLocals="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
+      ReferenceAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$(TargetPath)"
     />
   </Target>
 
-  <Target
-    Name="Binternal_InternalizeAfterPublish"
-    AfterTargets="Publish"
-    Condition="'$(TargetPath)' != ''"
-  >
+  <Target Name="Binternal_InternalizeAfterPublish" AfterTargets="Publish">
     <InternalizationTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
-      ReferenceLocals="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
+      ReferenceAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$([System.IO.Path]::Combine('$(ProjectDir)', '$(PublishDir)/$(AssemblyName).dll'))"
     />
   </Target>
