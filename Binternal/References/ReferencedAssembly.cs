@@ -7,16 +7,16 @@ using PowerKit.Extensions;
 
 namespace Binternal.References;
 
-internal partial record ReferenceAssembly(
+internal partial record ReferencedAssembly(
     string FilePath,
     string Name,
     string? ProjectFilePath,
     string? PackageId
 );
 
-internal partial record ReferenceAssembly : IEquatable<ReferenceAssembly>
+internal partial record ReferencedAssembly : IEquatable<ReferencedAssembly>
 {
-    public virtual bool Equals(ReferenceAssembly? other)
+    public virtual bool Equals(ReferencedAssembly? other)
     {
         if (other is null)
             return false;
@@ -32,9 +32,9 @@ internal partial record ReferenceAssembly : IEquatable<ReferenceAssembly>
         );
 }
 
-internal partial record ReferenceAssembly
+internal partial record ReferencedAssembly
 {
-    public static ReferenceAssembly? TryResolve(ITaskItem taskItem)
+    public static ReferencedAssembly? TryResolve(ITaskItem taskItem)
     {
         var filePath = taskItem.GetMetadata("FullPath").NullIfWhiteSpace() ?? taskItem.ItemSpec;
         if (string.IsNullOrWhiteSpace(filePath))
@@ -52,6 +52,6 @@ internal partial record ReferenceAssembly
 
         var packageId = taskItem.GetMetadata("NuGetPackageId").NullIfWhiteSpace();
 
-        return new ReferenceAssembly(filePath, name, projectFilePath, packageId);
+        return new ReferencedAssembly(filePath, name, projectFilePath, packageId);
     }
 }

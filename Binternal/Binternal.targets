@@ -3,7 +3,7 @@
     <InternalizationTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
-      ReferenceAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
+      ReferencedAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$(TargetPath)"
     />
   </Target>
@@ -12,7 +12,7 @@
     <InternalizationTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
-      ReferenceAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
+      ReferencedAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$([System.IO.Path]::Combine('$(ProjectDir)', '$(PublishDir)/$(AssemblyName).dll'))"
     />
   </Target>

@@ -10,40 +10,40 @@ namespace Binternal.Dependencies;
 internal record DependencyRoot(IReadOnlyList<RootedDependency> Dependencies)
 {
     private static IEnumerable<IDependency> FindDependencies(
-        ReferenceAssembly referenceAssembly,
-        IReadOnlyList<ReferenceAssembly> candidateReferenceAssemblies,
-        ISet<ReferenceAssembly>? visitedReferenceAssemblies = null
+        ReferencedAssembly referencedAssembly,
+        IReadOnlyList<ReferencedAssembly> candidateReferencedAssemblies,
+        ISet<ReferencedAssembly>? visitedReferencedAssemblies = null
     )
     {
-        visitedReferenceAssemblies ??= new HashSet<ReferenceAssembly>();
-        visitedReferenceAssemblies.Add(referenceAssembly);
+        visitedReferencedAssemblies ??= new HashSet<ReferencedAssembly>();
+        visitedReferencedAssemblies.Add(referencedAssembly);
 
         var dependencyAssemblyNames = AssemblyName
-            .TryGetReferencedAssemblyNames(referenceAssembly.FilePath)
+            .TryGetReferencedAssemblyNames(referencedAssembly.FilePath)
             ?.Select(a => a.Name)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         if (dependencyAssemblyNames is null)
             yield break;
 
-        foreach (var candidateReferenceAssembly in candidateReferenceAssemblies)
+        foreach (var candidateReferencedAssembly in candidateReferencedAssemblies)
         {
-            if (!dependencyAssemblyNames.Contains(candidateReferenceAssembly.Name))
+            if (!dependencyAssemblyNames.Contains(candidateReferencedAssembly.Name))
                 continue;
 
-            if (visitedReferenceAssemblies.Contains(candidateReferenceAssembly))
+            if (visitedReferencedAssemblies.Contains(candidateReferencedAssembly))
                 continue;
 
             var nestedDependencies = FindDependencies(
-                    candidateReferenceAssembly,
-                    candidateReferenceAssemblies,
-                    visitedReferenceAssemblies
+                    candidateReferencedAssembly,
+                    candidateReferencedAssemblies,
+                    visitedReferencedAssemblies
                 )
                 .ToArray();
 
             yield return new Dependency(
-                candidateReferenceAssembly.Name,
-                candidateReferenceAssembly.FilePath,
+                candidateReferencedAssembly.Name,
+                candidateReferencedAssembly.FilePath,
                 nestedDependencies
             );
         }
@@ -52,23 +52,27 @@ internal record DependencyRoot(IReadOnlyList<RootedDependency> Dependencies)
     private static IReadOnlyList<RootedDependency> ResolveDependencies(
         IReadOnlyList<ProjectReference> projectReferences,
         IReadOnlyList<PackageReference> packageReferences,
-        IReadOnlyList<ReferenceAssembly> referenceAssemblies
+        IReadOnlyList<ReferencedAssembly> referencedAssemblies
     )
     {
         var dependencies = new HashSet<RootedDependency>();
 
-        foreach (var referenceAssembly in referenceAssemblies)
+        foreach (var referencedAssembly in referencedAssemblies)
         {
             var projectReference = projectReferences.FirstOrDefault(p =>
                 string.Equals(
                     p.FilePath,
-                    referenceAssembly.ProjectFilePath,
+                    referencedAssembly.ProjectFilePath,
                     StringComparison.OrdinalIgnoreCase
                 )
             );
 
             var packageReference = packageReferences.FirstOrDefault(p =>
-                string.Equals(p.Id, referenceAssembly.PackageId, StringComparison.OrdinalIgnoreCase)
+                string.Equals(
+                    p.Id,
+                    referencedAssembly.PackageId,
+                    StringComparison.OrdinalIgnoreCase
+                )
             );
 
             if (projectReference is null && packageReference is null)
@@ -79,10 +83,10 @@ internal record DependencyRoot(IReadOnlyList<RootedDependency> Dependencies)
                 || packageReference?.IsInternalized == true;
 
             var dependency = new RootedDependency(
-                referenceAssembly.Name,
-                referenceAssembly.FilePath,
+                referencedAssembly.Name,
+                referencedAssembly.FilePath,
                 isInternalized,
-                FindDependencies(referenceAssembly, referenceAssemblies).ToArray()
+                FindDependencies(referencedAssembly, referencedAssemblies).ToArray()
             );
 
             dependencies.Add(dependency);
@@ -94,6 +98,6 @@ internal record DependencyRoot(IReadOnlyList<RootedDependency> Dependencies)
     public static DependencyRoot Resolve(
         IReadOnlyList<ProjectReference> projectReferences,
         IReadOnlyList<PackageReference> packageReferences,
-        IReadOnlyList<ReferenceAssembly> referenceAssemblies
-    ) => new(ResolveDependencies(projectReferences, packageReferences, referenceAssemblies));
+        IReadOnlyList<ReferencedAssembly> referencedAssemblies
+    ) => new(ResolveDependencies(projectReferences, packageReferences, referencedAssemblies));
 }

@@ -21,7 +21,7 @@ public class InternalizationTask : Task
     public ITaskItem[] ProjectReferences { get; set; } = [];
 
     [Required]
-    public ITaskItem[] ReferenceAssemblies { get; set; } = [];
+    public ITaskItem[] ReferencedAssemblies { get; set; } = [];
 
     [Required]
     public required string TargetFilePath { get; set; }
@@ -128,8 +128,9 @@ public class InternalizationTask : Task
     private bool Execute(
         IReadOnlyList<ProjectReference> projectReferences,
         IReadOnlyList<PackageReference> packageReferences,
-        IReadOnlyList<ReferenceAssembly> referenceAssemblies
-    ) => Execute(DependencyRoot.Resolve(projectReferences, packageReferences, referenceAssemblies));
+        IReadOnlyList<ReferencedAssembly> referencedAssemblies
+    ) =>
+        Execute(DependencyRoot.Resolve(projectReferences, packageReferences, referencedAssemblies));
 
     public override bool Execute()
     {
@@ -145,7 +146,7 @@ public class InternalizationTask : Task
 
         Log.LogMessage(
             "Reference assemblies: {0}.",
-            string.Join(Environment.NewLine, ReferenceAssemblies.Select(r => r.ItemSpec))
+            string.Join(Environment.NewLine, ReferencedAssemblies.Select(r => r.ItemSpec))
         );
 
         Log.LogMessage("Target: '{0}'.", TargetFilePath);
@@ -153,7 +154,7 @@ public class InternalizationTask : Task
         return Execute(
             ProjectReferences.Select(ProjectReference.TryResolve).WhereNotNull().ToArray(),
             PackageReferences.Select(PackageReference.TryResolve).WhereNotNull().ToArray(),
-            ReferenceAssemblies.Select(ReferenceAssembly.TryResolve).WhereNotNull().ToArray()
+            ReferencedAssemblies.Select(ReferencedAssembly.TryResolve).WhereNotNull().ToArray()
         );
     }
 }
