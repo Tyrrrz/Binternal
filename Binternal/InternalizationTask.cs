@@ -53,6 +53,9 @@ public class InternalizationTask : Task
                 // Some merged dependencies ship identical linker resource names (e.g. ILLink.Substitutions.xml).
                 // Keep them instead of emitting repeated duplicate-resource warnings.
                 AllowDuplicateResources = true,
+                // Some merged dependencies may contain identical type definitions (e.g. polyfills).
+                // Keep them instead of emitting repeated duplicate-type warnings.
+                AllowAllDuplicateTypes = true,
                 // Disable ILRepack's built-in console logging since we provide a custom logger below
                 Log = false,
             },
