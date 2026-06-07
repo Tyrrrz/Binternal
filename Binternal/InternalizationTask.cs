@@ -53,6 +53,9 @@ public class InternalizationTask : Task
                     .Prepend(TargetDirectoryPath)
                     .Distinct(StringComparer.OrdinalIgnoreCase)
                     .ToArray(),
+                // Some merged dependencies ship identical linker resource names (e.g. ILLink.Substitutions.xml).
+                // Keep them instead of emitting repeated duplicate-resource warnings.
+                AllowDuplicateResources = true,
                 // Disable ILRepack's built-in console logging since we provide a custom logger below
                 Log = false,
             },
