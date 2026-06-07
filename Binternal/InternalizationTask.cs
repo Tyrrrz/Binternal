@@ -28,7 +28,10 @@ public class InternalizationTask : Task
 
     private string TargetDirectoryPath => Path.GetDirectoryName(TargetFilePath) ?? string.Empty;
 
-    private bool Execute(IReadOnlyList<string> internalizedAssemblyFilePaths)
+    private bool Execute(
+        IReadOnlyList<string> internalizedAssemblyFilePaths,
+        IReadOnlyList<string> searchDirectoryPaths
+    )
     {
         if (!internalizedAssemblyFilePaths.Any())
         {
@@ -46,13 +49,7 @@ public class InternalizationTask : Task
                 OutputFile = TargetFilePath,
                 InputAssemblies = internalizedAssemblyFilePaths.Prepend(TargetFilePath).ToArray(),
                 Internalize = true,
-                // All directories where the internalized assemblies and their dependencies may be located
-                SearchDirectories = internalizedAssemblyFilePaths
-                    .Select(Path.GetDirectoryName)
-                    .WhereNotNullOrWhiteSpace()
-                    .Prepend(TargetDirectoryPath)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                    .ToArray(),
+                SearchDirectories = searchDirectoryPaths,
                 // Some merged dependencies ship identical linker resource names (e.g. ILLink.Substitutions.xml).
                 // Keep them instead of emitting repeated duplicate-resource warnings.
                 AllowDuplicateResources = true,
@@ -122,7 +119,13 @@ public class InternalizationTask : Task
             .Where(f => !nonInternalizedDependencyFilePaths.Contains(f))
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        return Execute(internalizedDependencyFilePaths.ToArray());
+        var searchDirectoryPaths = dependencyRoot
+            .Dependencies.SelectMany(d => d.GetAllDependencies().Prepend(d))
+            .Select(d => Path.GetDirectoryName(d.AssemblyFilePath) ?? string.Empty)
+            .WhereNotNullOrWhiteSpace()
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return Execute(internalizedDependencyFilePaths.ToArray(), searchDirectoryPaths.ToArray());
     }
 
     private bool Execute(
