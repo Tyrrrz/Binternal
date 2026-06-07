@@ -12,7 +12,10 @@
   <ItemGroup>
     <PackageReference Include="CSharpier.MSBuild" PrivateAssets="all" />
 
-    <!-- Example: internalize Newtonsoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Internalize="true" PrivateAssets="all" />
+    <!-- Package A: internalized -->
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Internalize="true" />
+
+    <!-- Package B: direct, not internalized (also transitive through package A) -->
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
   </ItemGroup>
 </Project>
