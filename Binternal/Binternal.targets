@@ -1,5 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
-  <Target Name="Binternal_InternalizeAfterBuild" AfterTargets="Build">
+  <Target
+    Name="Binternal_InternalizeAfterBuild"
+    AfterTargets="Build"
+    Condition="'$(TargetPath)' != ''"
+  >
     <InternalizationTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
@@ -8,7 +12,11 @@
     />
   </Target>
 
-  <Target Name="Binternal_InternalizeAfterPublish" AfterTargets="Publish">
+  <Target
+    Name="Binternal_InternalizeAfterPublish"
+    AfterTargets="Publish"
+    Condition="'$(PublishDir)' != ''"
+  >
     <InternalizationTask
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
