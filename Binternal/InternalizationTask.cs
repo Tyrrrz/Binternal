@@ -15,16 +15,16 @@ namespace Binternal;
 public class InternalizationTask : Task
 {
     [Required]
-    public ITaskItem[] PackageReferences { get; set; } = [];
+    public required ITaskItem[] PackageReferences { get; init; }
 
     [Required]
-    public ITaskItem[] ProjectReferences { get; set; } = [];
+    public required ITaskItem[] ProjectReferences { get; init; }
 
     [Required]
-    public ITaskItem[] ReferencedAssemblies { get; set; } = [];
+    public required ITaskItem[] ReferencedAssemblies { get; init; }
 
     [Required]
-    public required string TargetFilePath { get; set; }
+    public required string TargetFilePath { get; init; }
 
     private string TargetDirectoryPath => Path.GetDirectoryName(TargetFilePath) ?? string.Empty;
 

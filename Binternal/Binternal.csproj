@@ -38,11 +38,6 @@
     <PackageReference Include="System.Reflection.Metadata" PrivateAssets="all" />
   </ItemGroup>
 
-  <!-- Required for PowerKit -->
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <Reference Include="System.IO.Compression" />
-  </ItemGroup>
-
   <!-- Embed package references inside this package -->
   <PropertyGroup>
     <TargetsForTfmSpecificBuildOutput>
@@ -70,26 +65,6 @@
         Include="$(ProjectDepsFilePath)"
         TargetPath="$(ProjectDepsFileName)"
         FinalOutputPath="$(ProjectDepsFilePath)"
-      />
-    </ItemGroup>
-  </Target>
-
-  <!-- Expose package references to dependent projects (only needed locally, not when distributed through NuGet) -->
-  <PropertyGroup>
-    <GetTargetPathDependsOn>
-      $(GetTargetPathDependsOn);GetDependencyTargetPaths
-    </GetTargetPathDependsOn>
-  </PropertyGroup>
-
-  <Target Name="GetDependencyTargetPaths">
-    <ItemGroup>
-      <TargetPathWithTargetPlatformMoniker
-        Include="$(PKGMono_Cecil)/lib/$(TargetFramework)/*.dll"
-        IncludeRuntimeDependency="false"
-      />
-      <TargetPathWithTargetPlatformMoniker
-        Include="$(PKGRessy)/lib/$(TargetFramework)/*.dll"
-        IncludeRuntimeDependency="false"
       />
     </ItemGroup>
   </Target>

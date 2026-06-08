@@ -6,14 +6,19 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net10.0</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CSharpier.MSBuild" PrivateAssets="all" />
+    <PackageReference Include="PolyShim" PrivateAssets="all" />
 
     <!-- Package A: internalized -->
-    <PackageReference Include="Microsoft.Extensions.Http.Polly" Internalize="true" />
+    <PackageReference
+      Include="Microsoft.Extensions.Http.Polly"
+      Internalize="true"
+      PrivateAssets="all"
+    />
 
     <!-- Package B: direct, not internalized (also transitive through package A) -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
