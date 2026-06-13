@@ -22,5 +22,8 @@
 
     <!-- Package B: direct, not internalized (also transitive through package A) -->
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+
+    <!-- Make sure strong naming is preserved after internalization -->
+    <PackageReference Include="Snek" PrivateAssets="all" />
   </ItemGroup>
 </Project>
