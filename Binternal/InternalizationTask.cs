@@ -28,6 +28,8 @@ public class InternalizationTask : Task
 
     private string TargetDirectoryPath => Path.GetDirectoryName(TargetFilePath) ?? string.Empty;
 
+    public string? KeyFilePath { get; init; }
+
     private bool Execute(
         IReadOnlyList<string> internalizedAssemblyFilePaths,
         IReadOnlyList<string> searchDirectoryPaths
@@ -48,8 +50,9 @@ public class InternalizationTask : Task
             {
                 OutputFile = TargetFilePath,
                 InputAssemblies = internalizedAssemblyFilePaths.Prepend(TargetFilePath).ToArray(),
-                Internalize = true,
                 SearchDirectories = searchDirectoryPaths,
+                Internalize = true,
+                KeyFile = KeyFilePath,
                 // Some merged dependencies ship identical linker resource names (e.g. ILLink.Substitutions.xml).
                 // Keep them instead of emitting repeated duplicate-resource warnings.
                 AllowDuplicateResources = true,

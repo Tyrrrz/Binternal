@@ -9,6 +9,7 @@
       ProjectReferences="@(ProjectReference)"
       ReferencedAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$(TargetPath)"
+      KeyFilePath="$(AssemblyOriginatorKeyFile)"
     />
   </Target>
 
@@ -22,6 +23,7 @@
       ProjectReferences="@(ProjectReference)"
       ReferencedAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$([System.IO.Path]::Combine('$(ProjectDir)', '$(PublishDir)/$(AssemblyName).dll'))"
+      KeyFilePath="$(AssemblyOriginatorKeyFile)"
     />
   </Target>
 </Project>

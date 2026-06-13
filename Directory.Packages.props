@@ -16,6 +16,7 @@
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageVersion Include="PolyShim" Version="2.11.0" />
     <PackageVersion Include="PowerKit" Version="2.0.2" />
+    <PackageVersion Include="Snek" Version="1.0.0" />
     <PackageVersion Include="System.Reflection.Metadata" Version="9.0.8" />
   </ItemGroup>
 </Project>
