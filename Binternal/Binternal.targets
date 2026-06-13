@@ -10,6 +10,7 @@
       ReferencedAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$(TargetPath)"
       KeyFilePath="$(AssemblyOriginatorKeyFile)"
+      DelaySign="$(DelaySign)"
     />
   </Target>
 
@@ -24,6 +25,7 @@
       ReferencedAssemblies="@(ReferenceCopyLocalPaths);@(RuntimeCopyLocalItems)"
       TargetFilePath="$([System.IO.Path]::Combine('$(ProjectDir)', '$(PublishDir)/$(AssemblyName).dll'))"
       KeyFilePath="$(AssemblyOriginatorKeyFile)"
+      DelaySign="$(DelaySign)"
     />
   </Target>
 </Project>

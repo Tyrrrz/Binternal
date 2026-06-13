@@ -30,6 +30,8 @@ public class InternalizationTask : Task
 
     public string? KeyFilePath { get; init; }
 
+    public bool DelaySign { get; init; }
+
     private bool Execute(
         IReadOnlyList<string> internalizedAssemblyFilePaths,
         IReadOnlyList<string> searchDirectoryPaths
@@ -52,7 +54,9 @@ public class InternalizationTask : Task
                 InputAssemblies = internalizedAssemblyFilePaths.Prepend(TargetFilePath).ToArray(),
                 SearchDirectories = searchDirectoryPaths,
                 Internalize = true,
+                // Preserve the original assembly's strong name by signing the merged assembly with the same key
                 KeyFile = KeyFilePath,
+                DelaySign = DelaySign,
                 // Some merged dependencies ship identical linker resource names (e.g. ILLink.Substitutions.xml).
                 // Keep them instead of emitting repeated duplicate-resource warnings.
                 AllowDuplicateResources = true,
