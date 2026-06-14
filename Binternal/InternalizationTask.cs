@@ -129,6 +129,21 @@ public class InternalizationTask : Task
             .Select(d => d.AssemblyFilePath)
             // Exclude dependencies that are shared with non-internalized dependencies
             .Where(f => !nonInternalizedDependencyFilePaths.Contains(f))
+            // Exclude Microsoft.NET.Build.Extensions type-forwarding facades to avoid infinite recursion
+            .Where(f =>
+                !f.Contains(
+                    Path.DirectorySeparatorChar
+                        + "Microsoft.NET.Build.Extensions"
+                        + Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase
+                )
+                && !f.Contains(
+                    Path.AltDirectorySeparatorChar
+                        + "Microsoft.NET.Build.Extensions"
+                        + Path.AltDirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase
+                )
+            )
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         var searchDirectoryPaths = dependencyRoot
