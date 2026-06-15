@@ -148,7 +148,10 @@ public class InternalizationTask : Task
 
         var searchDirectoryPaths = dependencyRoot
             .Dependencies.SelectMany(d => d.GetAllDependencies().Prepend(d))
-            .Select(d => Path.GetDirectoryName(d.AssemblyFilePath) ?? string.Empty)
+            .Select(d => d.AssemblyFilePath)
+            // Include the shared framework assemblies
+            .Append(typeof(object).Assembly.Location)
+            .Select(Path.GetDirectoryName)
             .WhereNotNullOrWhiteSpace()
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
