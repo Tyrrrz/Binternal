@@ -60,6 +60,10 @@ public class InternalizationTask : Task
                 // Some merged dependencies may contain identical type definitions (e.g. polyfills).
                 // Keep them instead of emitting repeated duplicate-type warnings.
                 AllowAllDuplicateTypes = true,
+                // If we're already merging an assembly, don't remove references to its other versions.
+                // This may be relevant, for example, if the the same dependency is referenced in different versions
+                // and the higher version one doesn't end up being internalized.
+                KeepOtherVersionReferences = true,
                 // Preserve the original assembly's strong name by signing the merged assembly with the same key
                 KeyFile = KeyFilePath,
                 DelaySign = DelaySign,
@@ -149,8 +153,6 @@ public class InternalizationTask : Task
         var searchDirectoryPaths = dependencyRoot
             .Dependencies.SelectMany(d => d.GetAllDependencies().Prepend(d))
             .Select(d => d.AssemblyFilePath)
-            // Include the shared framework assemblies
-            .Append(typeof(object).Assembly.Location)
             .Select(Path.GetDirectoryName)
             .WhereNotNullOrWhiteSpace()
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
