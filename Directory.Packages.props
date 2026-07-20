@@ -8,9 +8,9 @@
     <PackageVersion Include="ILRepack.Lib" Version="2.0.46" />
     <PackageVersion
       Include="Microsoft.Extensions.DependencyInjection.Abstractions"
-      Version="10.0.8"
+      Version="10.0.10"
     />
-    <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="10.0.8" />
+    <PackageVersion Include="Microsoft.Extensions.Http.Polly" Version="10.0.10" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="17.14.28" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="17.14.28" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
