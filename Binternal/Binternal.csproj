@@ -21,10 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="CSharpier.MSBuild" PrivateAssets="all" />
-    <PackageReference Include="ILRepack.Lib" PrivateAssets="all">
-      <!-- ILRepack.Lib targets net472 but its API is compatible with netstandard2.0 -->
-      <NoWarn>NU1701</NoWarn>
-    </PackageReference>
+    <PackageReference Include="ILRepack.Lib" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="all" />
     <PackageReference
       Include="Microsoft.Build.Utilities.Core"
