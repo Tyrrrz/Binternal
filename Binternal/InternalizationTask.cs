@@ -54,10 +54,10 @@ public class InternalizationTask : Task
                 InputAssemblies = internalizedAssemblyFilePaths.Prepend(TargetFilePath).ToArray(),
                 SearchDirectories = searchDirectoryPaths,
                 Internalize = true,
-                // Some merged dependencies ship identical linker resource names (e.g. ILLink.Substitutions.xml).
+                // Some merged dependencies ship identical linker resource names (e.g., ILLink.Substitutions.xml).
                 // Keep them instead of emitting repeated duplicate-resource warnings.
                 AllowDuplicateResources = true,
-                // Some merged dependencies may contain identical type definitions (e.g. polyfills).
+                // Some merged dependencies may contain identical type definitions (e.g., polyfills).
                 // Keep them instead of emitting repeated duplicate-type warnings.
                 AllowAllDuplicateTypes = true,
                 // Preserve the original assembly's strong name by signing the merged assembly with the same key
