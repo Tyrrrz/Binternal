@@ -25,11 +25,10 @@
     <PackageReference Include="Microsoft.Build.Framework" PrivateAssets="all" />
     <PackageReference
       Include="Microsoft.Build.Utilities.Core"
-      PrivateAssets="all"
+      IncludeAssets="compile; build; native; contentfiles; analyzers; buildtransitive"
       ExcludeAssets="runtime"
-    >
-      <IncludeAssets>compile; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+      PrivateAssets="all"
+    />
     <PackageReference Include="PolyShim" PrivateAssets="all" />
     <PackageReference Include="PowerKit" PrivateAssets="all" />
     <PackageReference Include="System.Reflection.Metadata" PrivateAssets="all" />
