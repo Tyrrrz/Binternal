@@ -52,7 +52,7 @@ In order to internalize a dependency, mark its corresponding `PackageReference` 
 
 > [!NOTE]
 > Consider also adding the `PrivateAssets="all"` attribute to references that are being internalized.
-> This will make sure they are not passed as transitive dependencies to downstream consumers when your assembly is consumed through a NuGet package.
+> This will make sure they are not passed as transitive dependencies downstream when your assembly is consumed through a NuGet package.
 
 When the above project is built, `CliWrap.dll`, along with all of its own dependencies, will be merged into the output assembly.
 Public members exposed by this package will be converted into internal members, preventing them from being accessed by outside callers.
